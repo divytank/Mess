@@ -1,29 +1,52 @@
-const db = firebase.firestore();
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  query,
+  where,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
-const fetchMonthlyAnalysis = () => {
-    const month = document.getElementById("month").value;
-
-    db.collection("attendance")
-        .where("month", "==", month)
-        .get()
-        .then(snapshot => {
-            const tableBody = document.querySelector("#monthly-analysis tbody");
-            tableBody.innerHTML = "";  // Clear previous data
-
-            snapshot.forEach(doc => {
-                const data = doc.data();
-                const row = document.createElement("tr");
-                row.innerHTML = `
-                    <td>${data.name}</td>
-                    <td>${data.meal === "Lunch" ? 1 : 0}</td>
-                    <td>${data.meal === "Dinner" ? 1 : 0}</td>
-                `;
-                tableBody.appendChild(row);
-            });
-        })
-        .catch((error) => {
-            console.error("Error fetching analysis: ", error);
-        });
+const firebaseConfig = {
+  apiKey: "AIzaSyDzCChRQGajRyy22iZ-P58QMLtjlbM4Bmc",
+  authDomain: "mess-attendance-b92f9.firebaseapp.com",
+  projectId: "mess-attendance-b92f9",
+  storageBucket: "mess-attendance-b92f9.appspot.com",
+  messagingSenderId: "671902269485",
+  appId: "1:671902269485:web:e27454006792d27f51b8a4"
 };
 
-document.getElementById("fetch-analysis").addEventListener("click", fetchMonthlyAnalysis);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+document.getElementById("fetch-analysis").addEventListener("click", async () => {
+  const month = document.getElementById("month").value;
+  const q = query(collection(db, "attendance"), where("month", "==", month));
+  const snapshot = await getDocs(q);
+
+  const tableBody = document.querySelector("#monthly-analysis tbody");
+  tableBody.innerHTML = "";
+
+  const userMealCounts = {};
+
+  snapshot.forEach((doc) => {
+    const data = doc.data();
+    const name = data.name;
+    const meal = data.meal;
+
+    if (!userMealCounts[name]) {
+      userMealCounts[name] = { Lunch: 0, Dinner: 0 };
+    }
+    userMealCounts[name][meal]++;
+  });
+
+  for (const name in userMealCounts) {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${name}</td>
+      <td>${userMealCounts[name].Lunch}</td>
+      <td>${userMealCounts[name].Dinner}</td>
+    `;
+    tableBody.appendChild(row);
+  }
+});
