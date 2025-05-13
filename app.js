@@ -1,4 +1,3 @@
-// app.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
 import {
   getAuth,
@@ -19,8 +18,7 @@ const firebaseConfig = {
   projectId: "mess-attendance-b92f9",
   storageBucket: "mess-attendance-b92f9.appspot.com",
   messagingSenderId: "671902269485",
-  appId: "1:671902269485:web:e27454006792d27f51b8a4",
-  measurementId: "G-9QQY5C1EPT"
+  appId: "1:671902269485:web:e27454006792d27f51b8a4"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -28,7 +26,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
-window.loginWithGoogle = function () {
+function loginWithGoogle() {
   signInWithPopup(auth, provider)
     .then((result) => {
       const user = result.user;
@@ -36,13 +34,16 @@ window.loginWithGoogle = function () {
         <p>Welcome, ${user.displayName}</p>
         <p>Email: ${user.email}</p>
       `;
+      document.getElementById("login-section").style.display = "none";
+      document.getElementById("meal-selection-section").style.display = "block";
+      document.getElementById("user-name").textContent = user.displayName;
     })
     .catch((error) => {
       console.error("Login error:", error);
     });
-};
+}
 
-window.changeMealPreference = async function (meal) {
+async function changeMealPreference(meal) {
   const user = auth.currentUser;
   if (!user) {
     alert("Please sign in first.");
@@ -65,9 +66,16 @@ window.changeMealPreference = async function (meal) {
   } catch (error) {
     console.error("Error updating meal preference:", error);
   }
-};
+}
 
-document.getElementById("google-sign-in").addEventListener("click", loginWithGoogle);
-document.getElementById("lunch-btn").addEventListener("click", () => changeMealPreference("Lunch"));
-document.getElementById("dinner-btn").addEventListener("click", () => changeMealPreference("Dinner"));
-document.getElementById("logout-btn").addEventListener("click", () => signOut(auth));
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("google-sign-in").addEventListener("click", loginWithGoogle);
+  document.getElementById("lunch-btn").addEventListener("click", () => changeMealPreference("Lunch"));
+  document.getElementById("dinner-btn").addEventListener("click", () => changeMealPreference("Dinner"));
+  document.getElementById("logout-btn").addEventListener("click", () => {
+    signOut(auth).then(() => {
+      document.getElementById("login-section").style.display = "block";
+      document.getElementById("meal-selection-section").style.display = "none";
+    });
+  });
+});
