@@ -3,12 +3,14 @@ import {
   getAuth,
   GoogleAuthProvider,
   signInWithPopup,
-  signOut
+  signOut,
+  onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 import {
   getFirestore,
   doc,
   setDoc,
+  getDoc,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
@@ -18,7 +20,8 @@ const firebaseConfig = {
   projectId: "mess-attendance-b92f9",
   storageBucket: "mess-attendance-b92f9.appspot.com",
   messagingSenderId: "671902269485",
-  appId: "1:671902269485:web:e27454006792d27f51b8a4"
+  appId: "1:671902269485:web:e27454006792d27f51b8a4",
+  measurementId: "G-9QQY5C1EPT"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -26,56 +29,60 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
-function loginWithGoogle() {
-  signInWithPopup(auth, provider)
-    .then((result) => {
-      const user = result.user;
-      document.getElementById("user-info").innerHTML = `
-        <p>Welcome, ${user.displayName}</p>
-        <p>Email: ${user.email}</p>
-      `;
-      document.getElementById("login-section").style.display = "none";
-      document.getElementById("meal-selection-section").style.display = "block";
-      document.getElementById("user-name").textContent = user.displayName;
-    })
-    .catch((error) => {
-      console.error("Login error:", error);
-    });
-}
+const loginSection = document.getElementById("login-section");
+const mealSection = document.getElementById("meal-selection-section");
+const userName = document.getElementById("user-name");
+const status = document.getElementById("status");
 
-async function changeMealPreference(meal) {
+const loginWithGoogle = () => {
+  signInWithPopup(auth, provider).catch(console.error);
+};
+
+const updateUI = async (user) => {
+  if (user) {
+    loginSection.style.display = "none";
+    mealSection.style.display = "block";
+    userName.textContent = user.displayName;
+
+    const today = new Date().toISOString().split("T")[0];
+    const docRef = doc(db, "attendance", `${user.uid}_${today}`);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      status.textContent = `You have selected: ${docSnap.data().meal}`;
+    } else {
+      status.textContent = "You have not selected a meal yet.";
+    }
+  } else {
+    loginSection.style.display = "block";
+    mealSection.style.display = "none";
+  }
+};
+
+const selectMeal = async (meal) => {
   const user = auth.currentUser;
-  if (!user) {
-    alert("Please sign in first.");
-    return;
-  }
+  if (!user) return alert("Please sign in");
 
-  const date = new Date().toISOString().split('T')[0];
-  const month = date.substring(0, 7);
-  const docRef = doc(db, "attendance", `${user.uid}_${date}`);
+  const today = new Date().toISOString().split("T")[0];
+  const month = today.slice(0, 7);
+  const ref = doc(db, "attendance", `${user.uid}_${today}`);
 
-  try {
-    await setDoc(docRef, {
-      name: user.displayName,
-      meal: meal,
-      date: date,
-      month: month,
-      timestamp: serverTimestamp()
-    });
-    alert(`Your meal preference has been updated to ${meal}.`);
-  } catch (error) {
-    console.error("Error updating meal preference:", error);
-  }
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("google-sign-in").addEventListener("click", loginWithGoogle);
-  document.getElementById("lunch-btn").addEventListener("click", () => changeMealPreference("Lunch"));
-  document.getElementById("dinner-btn").addEventListener("click", () => changeMealPreference("Dinner"));
-  document.getElementById("logout-btn").addEventListener("click", () => {
-    signOut(auth).then(() => {
-      document.getElementById("login-section").style.display = "block";
-      document.getElementById("meal-selection-section").style.display = "none";
-    });
+  await setDoc(ref, {
+    uid: user.uid,
+    name: user.displayName,
+    email: user.email,
+    meal,
+    date: today,
+    month,
+    timestamp: serverTimestamp()
   });
-});
+
+  status.textContent = `You have selected: ${meal}`;
+};
+
+document.getElementById("google-sign-in").addEventListener("click", loginWithGoogle);
+document.getElementById("logout-btn").addEventListener("click", () => signOut(auth));
+document.getElementById("lunch-btn").addEventListener("click", () => selectMeal("Lunch"));
+document.getElementById("dinner-btn").addEventListener("click", () => selectMeal("Dinner"));
+
+onAuthStateChanged(auth, updateUI);
