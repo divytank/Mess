@@ -13,7 +13,9 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const auth = getAuth();
+const auth = getAuth(app);
+
+auth.languagecode='en'
 const provider = new GoogleAuthProvider();
 
 window.loginWithGoogle = function () {
