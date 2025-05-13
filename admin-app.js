@@ -1,3 +1,12 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  query,
+  where,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+
 const firebaseConfig = {
   apiKey: "AIzaSyDzCChRQGajRyy22iZ-P58QMLtjlbM4Bmc",
   authDomain: "mess-attendance-b92f9.firebaseapp.com",
@@ -8,21 +17,29 @@ const firebaseConfig = {
   measurementId: "G-9QQY5C1EPT"
 };
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-document.getElementById("fetch-analysis").addEventListener("click", async () => {
-  const month = document.getElementById("month").value;
-  const tableBody = document.querySelector("#monthly-analysis tbody");
+document.getElementById("fetch-btn").addEventListener("click", async () => {
+  const monthValue = document.getElementById("month-picker").value;
+  const tableBody = document.querySelector("#analysis-table tbody");
   tableBody.innerHTML = "";
 
-  const snapshot = await db.collection("attendance")
-    .where("month", "==", month)
-    .orderBy("date")
-    .get();
+  if (!monthValue) {
+    alert("Please select a month.");
+    return;
+  }
 
-  snapshot.forEach(doc => {
+  const q = query(collection(db, "attendance"), where("month", "==", monthValue));
+  const querySnapshot = await getDocs(q);
+
+  const dataMap = {};
+
+  querySnapshot.forEach(doc => {
     const data = doc.data();
+    const key = `${data.uid}_${data.date}`;
+    dataMap[key] = data; // overwrite if re-selected
+
     const row = document.createElement("tr");
     row.innerHTML = `
       <td>${data.name}</td>
@@ -31,4 +48,8 @@ document.getElementById("fetch-analysis").addEventListener("click", async () => 
     `;
     tableBody.appendChild(row);
   });
+
+  if (querySnapshot.empty) {
+    tableBody.innerHTML = `<tr><td colspan="3">No records found for this month.</td></tr>`;
+  }
 });
