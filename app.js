@@ -1,6 +1,17 @@
 // app.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signOut
+} from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDzCChRQGajRyy22iZ-P58QMLtjlbM4Bmc",
@@ -14,8 +25,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-
-auth.languagecode='en'
+const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
 window.loginWithGoogle = function () {
@@ -32,30 +42,32 @@ window.loginWithGoogle = function () {
     });
 };
 
+window.changeMealPreference = async function (meal) {
+  const user = auth.currentUser;
+  if (!user) {
+    alert("Please sign in first.");
+    return;
+  }
 
-const changeMealPreference = (meal) => {
-    const user = firebase.auth().currentUser;
-    const date = new Date().toISOString().split('T')[0];  
-    const month = date.substring(0, 7);  
+  const date = new Date().toISOString().split('T')[0];
+  const month = date.substring(0, 7);
+  const docRef = doc(db, "attendance", `${user.uid}_${date}`);
 
-    const mealDocRef = db.collection("attendance").doc(user.uid);
-
-    mealDocRef.set({
-        name: user.displayName,
-        meal: meal,
-        date: date,
-        month: month,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true })
-    .then(() => {
-        alert(`Your meal preference has been updated to ${meal}.`);
-    })
-    .catch(error => {
-        console.error("Error updating meal preference: ", error);
+  try {
+    await setDoc(docRef, {
+      name: user.displayName,
+      meal: meal,
+      date: date,
+      month: month,
+      timestamp: serverTimestamp()
     });
+    alert(`Your meal preference has been updated to ${meal}.`);
+  } catch (error) {
+    console.error("Error updating meal preference:", error);
+  }
 };
 
-document.getElementById("google-sign-in").addEventListener("click", signInWithGoogle);
+document.getElementById("google-sign-in").addEventListener("click", loginWithGoogle);
 document.getElementById("lunch-btn").addEventListener("click", () => changeMealPreference("Lunch"));
 document.getElementById("dinner-btn").addEventListener("click", () => changeMealPreference("Dinner"));
-document.getElementById("logout-btn").addEventListener("click", () => firebase.auth().signOut());
+document.getElementById("logout-btn").addEventListener("click", () => signOut(auth));
