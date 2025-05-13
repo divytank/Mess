@@ -3,27 +3,27 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Mess Attendance</title>
+  <title>Mess Attendance - Student</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div id="app">
-    <header>
-      <h1>Hostel Mess Attendance</h1>
-    </header>
-    <section id="login-section">
-      <button id="google-sign-in">Login with Google</button>
-    </section>
-    <section id="meal-selection-section" style="display: none;">
-      <h2>Welcome, <span id="user-name"></span></h2>
-      <p>Select or Change your meal for today:</p>
-      <div class="meal-options">
-        <button id="lunch-btn" class="meal-btn">Lunch</button>
-        <button id="dinner-btn" class="meal-btn">Dinner</button>
-      </div>
-      <p id="status"></p>
-      <button id="logout-btn">Logout</button>
-    </section>
+  <div class="container">
+    <div class="card">
+      <h1>Mess Attendance</h1>
+      <section id="login-section">
+        <button id="google-sign-in" class="btn primary">Sign in with Google</button>
+      </section>
+      <section id="meal-section" style="display: none;">
+        <h2>Welcome, <span id="user-name"></span></h2>
+        <p>Select your meal for <span id="current-date"></span>:</p>
+        <div class="meal-buttons">
+          <button id="lunch-btn" class="btn">Lunch</button>
+          <button id="dinner-btn" class="btn">Dinner</button>
+        </div>
+        <small>You can update your choice anytime today.</small>
+        <button id="logout-btn" class="btn danger">Logout</button>
+      </section>
+    </div>
   </div>
   <script type="module" src="app.js"></script>
 </body>
