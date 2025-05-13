@@ -2,29 +2,32 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Admin Dashboard</title>
   <link rel="stylesheet" href="admin-style.css" />
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
 </head>
 <body>
-  <div id="admin-dashboard">
-    <h1>Admin Dashboard</h1>
-    <label for="month">Select Month:</label>
-    <input type="month" id="month" />
-    <button id="fetch-analysis">Fetch Analysis</button>
-    <table id="monthly-analysis">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Date</th>
-          <th>Meal</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+  <div class="admin-container">
+    <div class="admin-card">
+      <h1>Mess Attendance - Admin Dashboard</h1>
+
+      <label for="month-picker">Select Month</label>
+      <input type="month" id="month-picker" />
+
+      <button id="fetch-btn" class="btn">Fetch Records</button>
+
+      <table id="analysis-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Date</th>
+            <th>Meal</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
   </div>
-  <script src="admin-app.js"></script>
+  <script type="module" src="admin-app.js"></script>
 </body>
 </html>
